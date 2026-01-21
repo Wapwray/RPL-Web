@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RPL Smoke Test</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 32px;
+        background: #f7f9fc;
+        color: #1f2937;
+      }
+      .card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        padding: 24px;
+      }
+      h1 {
+        margin: 0 0 16px;
+        font-size: 24px;
+      }
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        background: #2563eb;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+      }
+      button:hover:not(:disabled) {
+        background: #1d4ed8;
+      }
+      pre {
+        margin-top: 16px;
+        padding: 16px;
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 8px;
+        overflow: auto;
+        min-height: 180px;
+      }
+      .status {
+        margin-top: 12px;
+        font-size: 14px;
+        color: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>RPL Smoke Test</h1>
+
+      <h2>Industry List</h2>
+      <button id="callButton">CALL</button>
+      <div class="status" id="status">Idle.</div>
+      <pre id="output">Response will appear here.</pre>
+
+      <h2>RPL Questions</h2>
+      <button id="questionsButton">CALL</button>
+      <div class="status" id="questionsStatus">Idle.</div>
+      <pre id="questionsOutput">Response will appear here.</pre>
+    </div>
+
+    <script>
+      const url =
+        "https://default4f0de57b35694b51b8c8b1dadd7ba8.19.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2345386e5471436db592d193991729d2/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KHRx01bx0XK1sV5ktSOz52PjUL2p3xpFMcTQeeOMk7g";
+      const questionsUrl =
+        "https://default4f0de57b35694b51b8c8b1dadd7ba8.19.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8feea7df352a455d9efde46977446910/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=AF-53thnNRJd9IxzY55POQzrW8owJ2SA6EhRycxtTEY";
+
+      const callButton = document.getElementById("callButton");
+      const output = document.getElementById("output");
+      const status = document.getElementById("status");
+      const questionsButton = document.getElementById("questionsButton");
+      const questionsOutput = document.getElementById("questionsOutput");
+      const questionsStatus = document.getElementById("questionsStatus");
+
+      const setStatus = (target, message) => {
+        target.textContent = message;
+      };
+
+      const formatResponse = async (response) => {
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const json = await response.json();
+          if (json && typeof json.listitems === "string") {
+            try {
+              const listItems = JSON.parse(json.listitems);
+              return JSON.stringify(listItems, null, 2);
+            } catch (parseError) {
+              return JSON.stringify(
+                {
+                  error: "Unable to parse listitems",
+                  details: parseError?.message || String(parseError),
+                  raw: json.listitems,
+                },
+                null,
+                2
+              );
+            }
+          }
+          return JSON.stringify(json, null, 2);
+        }
+        return await response.text();
+      };
+
+      const callEndpoint = async (button, statusTarget, outputTarget, endpoint) => {
+        button.disabled = true;
+        setStatus(statusTarget, "Calling endpoint...");
+        outputTarget.textContent = "";
+
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const body = await formatResponse(response);
+          outputTarget.textContent = body || "(No response body)";
+          setStatus(
+            statusTarget,
+            `Done. Status: ${response.status} ${response.statusText}`
+          );
+        } catch (error) {
+          outputTarget.textContent = error?.message || String(error);
+          setStatus(statusTarget, "Request failed.");
+        } finally {
+          button.disabled = false;
+        }
+      };
+
+      callButton.addEventListener("click", () =>
+        callEndpoint(callButton, status, output, url)
+      );
+
+      questionsButton.addEventListener("click", () =>
+        callEndpoint(questionsButton, questionsStatus, questionsOutput, questionsUrl)
+      );
+    </script>
+  </body>
+</html>

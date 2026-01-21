@@ -1,0 +1,16 @@
+{
+  "name": "sharepoint-list-webapp",
+  "version": "1.0.0",
+  "description": "Static frontend with Node server to read a SharePoint List via Microsoft Graph.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

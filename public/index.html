@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SharePoint List Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>SharePoint List Viewer</h1>
+        <p>Read-only view powered by Microsoft Graph.</p>
+      </header>
+
+      <section class="controls">
+        <button id="refreshBtn">Refresh</button>
+        <span id="status" class="status">Idle</span>
+      </section>
+
+      <section>
+        <pre id="output" class="output">Click Refresh to load items.</pre>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

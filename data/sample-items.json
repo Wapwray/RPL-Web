@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "fields": {
+      "Title": "Sample item A",
+      "Status": "Open",
+      "Owner": "A. User"
+    }
+  },
+  {
+    "id": "2",
+    "fields": {
+      "Title": "Sample item B",
+      "Status": "In Progress",
+      "Owner": "B. User"
+    }
+  },
+  {
+    "id": "3",
+    "fields": {
+      "Title": "Sample item C",
+      "Status": "Closed",
+      "Owner": "C. User"
+    }
+  }
+]

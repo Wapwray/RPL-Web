@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Test</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 32px;
+        background: #f7f9fc;
+        color: #1f2937;
+      }
+      .card {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        padding: 24px;
+      }
+      h1 {
+        margin: 0 0 16px;
+        font-size: 24px;
+      }
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        background: #2563eb;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+      }
+      button:hover:not(:disabled) {
+        background: #1d4ed8;
+      }
+      .status {
+        margin-top: 12px;
+        font-size: 14px;
+        color: #475569;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+        background: #ffffff;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: top;
+      }
+      th {
+        background: #f1f5f9;
+        font-weight: 600;
+        font-size: 14px;
+        color: #334155;
+      }
+      tbody tr:hover {
+        background: #f8fafc;
+      }
+      .placeholder {
+        margin-top: 16px;
+        padding: 16px;
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>AI Test</h1>
+      <button id="callButton">CALL</button>
+      <div class="status" id="status">Idle.</div>
+
+      <div id="tableWrapper" hidden>
+        <table>
+          <thead>
+            <tr>
+              <th>Question Number</th>
+              <th>Area</th>
+              <th>Question</th>
+              <th>Hint</th>
+              <th>Objective</th>
+            </tr>
+          </thead>
+          <tbody id="questionsBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="placeholder">Response will appear here.</div>
+    </div>
+
+    <script>
+      const questionsUrl =
+        "https://default4f0de57b35694b51b8c8b1dadd7ba8.19.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8feea7df352a455d9efde46977446910/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=AF-53thnNRJd9IxzY55POQzrW8owJ2SA6EhRycxtTEY";
+
+      const callButton = document.getElementById("callButton");
+      const status = document.getElementById("status");
+      const tableWrapper = document.getElementById("tableWrapper");
+      const questionsBody = document.getElementById("questionsBody");
+      const emptyState = document.getElementById("emptyState");
+
+      const setStatus = (message) => {
+        status.textContent = message;
+      };
+
+      const parseListItems = (json) => {
+        if (!json || typeof json.listitems !== "string") {
+          return { items: [], error: "Response does not include listitems." };
+        }
+        try {
+          const listItems = JSON.parse(json.listitems);
+          if (!Array.isArray(listItems)) {
+            return { items: [], error: "listitems is not an array." };
+          }
+          return { items: listItems, error: null };
+        } catch (parseError) {
+          return {
+            items: [],
+            error: parseError?.message || String(parseError),
+          };
+        }
+      };
+
+      const renderTable = (items) => {
+        questionsBody.textContent = "";
+        items.forEach((item) => {
+          const row = document.createElement("tr");
+          const cells = [
+            item.Title ?? "",
+            item.field_1 ?? "",
+            item.field_5 ?? "",
+            item.Hints ?? "",
+            item.field_3 ?? "",
+          ];
+
+          cells.forEach((value) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+
+          questionsBody.appendChild(row);
+        });
+      };
+
+      const showError = (message) => {
+        tableWrapper.hidden = true;
+        emptyState.textContent = message;
+        emptyState.hidden = false;
+      };
+
+      callButton.addEventListener("click", async () => {
+        callButton.disabled = true;
+        setStatus("Calling endpoint...");
+        emptyState.hidden = true;
+        tableWrapper.hidden = true;
+
+        try {
+          const response = await fetch(questionsUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const json = await response.json();
+          const { items, error } = parseListItems(json);
+
+          if (error) {
+            showError(`Unable to parse response: ${error}`);
+          } else if (!items.length) {
+            showError("No questions returned.");
+          } else {
+            renderTable(items);
+            tableWrapper.hidden = false;
+          }
+
+          setStatus(`Done. Status: ${response.status} ${response.statusText}`);
+        } catch (error) {
+          showError(error?.message || String(error));
+          setStatus("Request failed.");
+        } finally {
+          callButton.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
