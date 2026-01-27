@@ -1,32 +1,43 @@
-# SharePoint List Web App
+# RPL SharePoint List Viewer
 
-Static HTML/JavaScript frontend with a Node.js server that reads a SharePoint List via Power Automate.
+Vite + React + TypeScript app that reads a SharePoint Online list using Microsoft Graph and delegated Microsoft Entra ID auth.
 
 ## Prerequisites
 
 - Node.js 18+
-- Power Automate flow with an HTTP trigger that returns list data
+- Microsoft Entra ID app registration
 
-## Setup
+## Entra app registration
 
-1. Create a `.env` file from `.env.example` and fill in values.
-2. Install dependencies:
-   - `npm install`
-3. Start the server:
-   - `npm start`
-4. Open `http://localhost:3000`.
+1. Create a new app registration in Entra ID.
+2. Under **Authentication**, add a **Single-page application (SPA)** platform and set redirect URI to `http://localhost:5173`.
+3. Under **API permissions**, add **delegated** permissions:
+   - `User.Read`
+   - `Sites.Read.All`
+4. If `Sites.Read.All` shows **Admin consent required**, an admin must grant consent.
 
-## Local Mock Mode
+## Environment configuration
 
-To test locally without SharePoint credentials:
+Create a `.env` file from `.env.example` and fill in:
 
-1. Set `SP_MOCK=true` in `.env`.
-2. Start the server with `npm start`.
-3. The API will return sample data from `data/sample-items.json`.
+- `VITE_AAD_CLIENT_ID`
+- `VITE_AAD_TENANT_ID`
+- `VITE_REDIRECT_URI` (default: `http://localhost:5173`)
 
-## Power Automate Output Shape
+## Run locally
 
-The flow should return JSON in one of these shapes:
+```bash
+npm install
+npm run dev
+```
 
-- `{ "items": [ ... ] }`
-- `[ ... ]`
+Open `http://localhost:5173`.
+
+## Production (optional)
+
+```bash
+npm run build
+npm start
+```
+
+This serves the built app with a minimal Express server and a `/health` endpoint.
